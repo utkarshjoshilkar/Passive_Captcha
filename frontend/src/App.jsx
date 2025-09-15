@@ -3,6 +3,7 @@ import Home from "./pages/Home";
 import Admin from "./pages/Admin";
 import Stats from "./pages/Stats";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/stats" element={<Stats />} />
       </Routes>
+      <Footer/>
     </div>
   );
 }
