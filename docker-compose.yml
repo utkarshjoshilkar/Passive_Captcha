@@ -1,26 +1,26 @@
-version: "3.8"
-services:
-  backend:
-    build: ./backend-server
-    ports:
-      - "8080:8080"
-    environment:
-      - SPRING_PROFILES_ACTIVE=default
-      - ml.service.url=http://ml-service:8000
-    depends_on:
-      - ml-service
-    networks:
-      - pc-net
+# version: "3.8"
+# services:
+#   backend:
+#     build: ./backend-server
+#     ports:
+#       - "8080:8080"
+#     environment:
+#       - SPRING_PROFILES_ACTIVE=default
+#       - ml.service.url=http://ml-service:8000
+#     depends_on:
+#       - ml-service
+#     networks:
+#       - pc-net
 
-  ml-service:
-    build: ./ml-service
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./ml-service/model:/app/model
-    networks:
-      - pc-net
+#   ml-service:
+#     build: ./ml-service
+#     ports:
+#       - "8000:8000"
+#     volumes:
+#       - ./ml-service/model:/app/model
+#     networks:
+#       - pc-net
 
-networks:
-  pc-net:
-    driver: bridge
+# networks:
+#   pc-net:
+#     driver: bridge
