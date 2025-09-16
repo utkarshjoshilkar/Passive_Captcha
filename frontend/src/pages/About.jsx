@@ -3,18 +3,19 @@ export default function About() {
     <div className="about-container">
       <h1>About Passive Captcha</h1>
       <p>
-        Passive Captcha is a modern security solution that verifies users 
-        without interrupting their browsing experience. 
-        Instead of annoying puzzles, it observes natural user interactions 
-        such as mouse movements, typing patterns, and session behavior.
+        Passive Captcha is a next-generation security solution that verifies 
+        human users without interrupting their browsing experience.
       </p>
 
-      <h2>Why Passive Captcha?</h2>
-      <ul>
-        <li>No user frustration — seamless experience</li>
-        <li>Better security against bots</li>
-        <li>Lightweight and easy to integrate</li>
-      </ul>
+      <p>
+        Instead of showing frustrating puzzles, it analyzes user behavior and 
+        interaction patterns in the background to identify bots.
+      </p>
+
+      <p>
+        This project aims to create a safer and smoother web experience for 
+        everyone — users, developers, and businesses.
+      </p>
     </div>
-  )
+  );
 }
