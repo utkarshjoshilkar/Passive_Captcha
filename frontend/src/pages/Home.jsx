@@ -14,21 +14,24 @@ export default function Home() {
 
       {/* Features Section */}
       <section className="features">
-        <h2>Key Features</h2>
+        <div className="container">
+          <h2>Key Features</h2>
+          <div className="features-grid">
+            <div className="feature-card">
+              <h3>Invisible Protection</h3>
+              <p>Protect your site without annoying users.</p>
+            </div>
 
-        <div className="features-card">
-          <h3>Invisible Protection</h3>
-          <p>Protect your site without annoying users.</p>
-        </div>
+            <div className="feature-card">
+              <h3>Fast Performance</h3>
+              <p>Optimized for speed with minimal resource usage.</p>
+            </div>
 
-        <div className="card">
-          <h3>Fast Performance</h3>
-          <p>Optimized for speed with minimal resource usage.</p>
-        </div>
-
-        <div className="card">
-          <h3>Easy Integration</h3>
-          <p>Simple setup to secure your forms in minutes.</p>
+            <div className="feature-card">
+              <h3>Easy Integration</h3>
+              <p>Simple setup to secure your forms in minutes.</p>
+            </div>
+          </div>
         </div>
       </section>
     </>

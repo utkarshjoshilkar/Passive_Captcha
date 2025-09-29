@@ -6,6 +6,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import About from "./pages/About";
 import Services from "./pages/Services";
+import "./App.css";
 
 export default function App() {
   return (
