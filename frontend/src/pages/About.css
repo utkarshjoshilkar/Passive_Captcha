@@ -1,0 +1,38 @@
+.about-container {
+  max-width: 800px;
+  margin: 50px auto;
+  padding: 20px;
+  line-height: 1.8;
+  text-align: left;
+  background: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.about-container h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 2rem;
+  color: #764ba2;
+}
+
+.about-container h2 {
+  margin-top: 20px;
+  color: #333;
+}
+
+.about-container p {
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+  color: #555;
+}
+
+.about-container ul {
+  margin-top: 15px;
+  padding-left: 20px;
+}
+
+.about-container ul li {
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
