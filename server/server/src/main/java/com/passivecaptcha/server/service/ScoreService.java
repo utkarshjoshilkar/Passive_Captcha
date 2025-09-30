@@ -6,20 +6,40 @@ import org.springframework.stereotype.Service;
 @Service
 public class ScoreService {
 
-    // Weights (can be tuned later or replaced by ML model)
-    private static final double POINTER_MOVE_WEIGHT = 0.4;
+    // Weights for different features
+    private static final double POINTER_MOVE_WEIGHT = 0.3;
     private static final double SPEED_WEIGHT = 0.3;
     private static final double KEYBOARD_WEIGHT = 0.2;
-    private static final double SESSION_WEIGHT = 0.1;
+    private static final double SESSION_WEIGHT = 0.2;
 
     public double calculateScore(UserFeatures features) {
         double score = 0.0;
 
-        if (features.getNumPointerMoves() > 10) score += POINTER_MOVE_WEIGHT;
-        if (features.getAvgPointerSpeed() > 0.5) score += SPEED_WEIGHT;
-        if (features.isUsedKeyboard()) score += KEYBOARD_WEIGHT;
-        if (features.getSessionDuration() > 5000) score += SESSION_WEIGHT;
+        // Pointer moves: More moves = more human-like (0-50 moves considered normal)
+        double moveScore = Math.min(features.getNumPointerMoves() / 50.0, 1.0);
+        score += moveScore * POINTER_MOVE_WEIGHT;
 
-        return Math.min(score, 1.0); // keep between 0 and 1
+        // Speed: Moderate speed = human-like (0.5-2.0 pixels/ms)
+        double speed = features.getAvgPointerSpeed();
+        double speedScore = 0.0;
+        if (speed >= 0.5 && speed <= 2.0) {
+            speedScore = 1.0; // Perfect human speed
+        } else if (speed > 2.0) {
+            speedScore = Math.max(0, 1.0 - (speed - 2.0) / 5.0); // Too fast = suspicious
+        } else {
+            speedScore = speed / 0.5; // Too slow = suspicious
+        }
+        score += speedScore * SPEED_WEIGHT;
+
+        // Keyboard usage: Using keyboard = more human-like
+        if (features.isUsedKeyboard()) {
+            score += KEYBOARD_WEIGHT;
+        }
+
+        // Session duration: Longer session = more human-like (> 2 seconds)
+        double sessionScore = Math.min(features.getSessionDuration() / 10000.0, 1.0); // 10 seconds max
+        score += sessionScore * SESSION_WEIGHT;
+
+        return Math.min(Math.max(score, 0.0), 1.0); // Ensure between 0 and 1
     }
 }
