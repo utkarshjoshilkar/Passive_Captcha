@@ -7,6 +7,7 @@ import Footer from "./components/Footer";
 import About from "./pages/About";
 import Services from "./pages/Services";
 import PassiveCaptchaDemo from "./components/PassiveCaptchaDemo";
+import ProtectedLogin from "./components/ProtectedLogin"; // Add this line
 import "./App.css";
 
 export default function App() {
@@ -21,6 +22,7 @@ export default function App() {
           <Route path="/about" element={<About />} />
           <Route path="/services" element={<Services />} />
           <Route path="/demo" element={<PassiveCaptchaDemo />} />
+          <Route path="/login" element={<ProtectedLogin />} /> {/* Add this line */}
         </Routes>
       </main>
       <Footer />
