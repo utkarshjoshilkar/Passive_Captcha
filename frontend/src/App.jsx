@@ -6,19 +6,23 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import About from "./pages/About";
 import Services from "./pages/Services";
+import PassiveCaptchaDemo from "./components/PassiveCaptchaDemo";
 import "./App.css";
 
 export default function App() {
   return (
-    <div>
+    <div className="app">
       <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/stats" element={<Stats />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/services" element={<Services />} />
-      </Routes>
+      <main className="main-content">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/stats" element={<Stats />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/demo" element={<PassiveCaptchaDemo />} />
+        </Routes>
+      </main>
       <Footer />
     </div>
   );

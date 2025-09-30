@@ -11,7 +11,7 @@ export default function Stats() {
       try {
         setLoading(true);
         const response = await fetch("http://localhost:8080/api/v1/stats");
-        if (!response.ok) throw new Error("Network response was not ok");
+        if (!response.ok) throw new Error("Failed to fetch stats");
         const data = await response.json();
         setStats(data);
       } catch (err) {
@@ -22,6 +22,9 @@ export default function Stats() {
     };
 
     fetchStats();
+    // Refresh stats every 10 seconds
+    const interval = setInterval(fetchStats, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) {
@@ -29,7 +32,8 @@ export default function Stats() {
       <div className="stats-container">
         <div className="stats-content">
           <h1>Passive Captcha Stats</h1>
-          <div className="loading">Loading stats...</div>
+          <div className="loading-spinner"></div>
+          <p>Loading statistics...</p>
         </div>
       </div>
     );
@@ -41,8 +45,11 @@ export default function Stats() {
         <div className="stats-content">
           <h1>Passive Captcha Stats</h1>
           <div className="error-message">
-            Error: {error}
-            <p>Please make sure the server is running on port 8080</p>
+            <strong>Error:</strong> {error}
+            <p>Make sure the backend server is running on http://localhost:8080</p>
+            <button onClick={() => window.location.reload()} className="retry-btn">
+              Retry
+            </button>
           </div>
         </div>
       </div>
@@ -76,6 +83,12 @@ export default function Stats() {
             </div>
           </div>
         </div>
+        
+        {stats?.totalRequests === 0 && (
+          <div className="no-data-message">
+            <p>No data yet. Try the <a href="/demo">demo</a> to generate some statistics!</p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import "./Home.css";
+import { Link } from "react-router-dom";
 
 export default function Home() {
   return (
@@ -8,7 +9,10 @@ export default function Home() {
         <div className="hero-content">
           <h1>Welcome to Passive Captcha</h1>
           <p>Secure your applications with invisible protection.</p>
-          <button className="hero-btn">Get Started</button>
+          <div className="hero-buttons">
+            <Link to="/demo" className="hero-btn">Try Demo</Link>
+            <Link to="/about" className="hero-btn secondary">Learn More</Link>
+          </div>
         </div>
       </section>
 
@@ -23,13 +27,13 @@ export default function Home() {
             </div>
 
             <div className="feature-card">
-              <h3>Fast Performance</h3>
-              <p>Optimized for speed with minimal resource usage.</p>
+              <h3>Behavior Analysis</h3>
+              <p>Analyze mouse movements, keyboard usage, and session patterns.</p>
             </div>
 
             <div className="feature-card">
-              <h3>Easy Integration</h3>
-              <p>Simple setup to secure your forms in minutes.</p>
+              <h3>Real-time Scoring</h3>
+              <p>Instant risk assessment with detailed analytics.</p>
             </div>
           </div>
         </div>
