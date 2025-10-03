@@ -65,18 +65,18 @@ export default function Contact() {
                 </div>
               </div>
               
-              <div className="contact-method">
+              {/* <div className="contact-method">
                 <div className="method-icon">💬</div>
                 <div>
                   <h3>Live Chat</h3>
                   <p>Available during business hours</p>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
 
           <form className="contact-form" onSubmit={handleSubmit}>
-            <h2>Send us a Message</h2>
+            <h2>Request API key </h2>
             
             <div className="form-group">
               <label>Full Name *</label>
@@ -123,7 +123,7 @@ export default function Contact() {
             </div>
 
             <button type="submit" className="submit-btn">
-              Send Message
+              Request
             </button>
           </form>
         </div>

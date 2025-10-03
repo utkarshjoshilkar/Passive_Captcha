@@ -35,7 +35,7 @@ public class ScoreController {
 
             // Calculate score
             double score = scoreService.calculateScore(savedFeatures);
-            String decision = score > 0.5 ? "allow" : "challenge";
+            String decision = scoreService.makeDecision(score);
 
             // Prepare response
             Map<String, Object> response = new HashMap<>();
@@ -44,6 +44,15 @@ public class ScoreController {
             response.put("id", savedFeatures.getId());
             response.put("timestamp", savedFeatures.getCreatedAt());
             response.put("status", "success");
+
+            // Add friendly message
+            if (decision.equals("allow")) {
+                response.put("message", "Your behavior appears human-like. Access granted!");
+            } else if (decision.equals("review")) {
+                response.put("message", "Your behavior is mostly human-like. No action needed.");
+            } else {
+                response.put("message", "Additional verification may be required.");
+            }
 
             return response;
         } catch (Exception e) {
@@ -68,16 +77,24 @@ public class ScoreController {
 
             long totalRequests = allScores.size();
             long allowedRequests = allScores.stream()
-                    .filter(features -> scoreService.calculateScore(features) > 0.5)
+                    .filter(features -> scoreService.makeDecision(scoreService.calculateScore(features)).equals("allow"))
                     .count();
-            long challengedRequests = totalRequests - allowedRequests;
+            long challengedRequests = allScores.stream()
+                    .filter(features -> scoreService.makeDecision(scoreService.calculateScore(features)).equals("challenge"))
+                    .count();
+            long reviewRequests = totalRequests - allowedRequests - challengedRequests;
 
             Map<String, Object> stats = new HashMap<>();
             stats.put("totalRequests", totalRequests);
             stats.put("allowedRequests", allowedRequests);
             stats.put("challengedRequests", challengedRequests);
+            stats.put("reviewRequests", reviewRequests);
             stats.put("allowPercentage", totalRequests > 0 ?
                     Math.round((allowedRequests * 100.0 / totalRequests) * 100.0) / 100.0 : 0);
+            stats.put("challengePercentage", totalRequests > 0 ?
+                    Math.round((challengedRequests * 100.0 / totalRequests) * 100.0) / 100.0 : 0);
+            stats.put("reviewPercentage", totalRequests > 0 ?
+                    Math.round((reviewRequests * 100.0 / totalRequests) * 100.0) / 100.0 : 0);
             stats.put("status", "success");
 
             return stats;
