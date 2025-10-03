@@ -29,8 +29,7 @@ public class UserFeatures {
         // JPA requires a no-args constructor
     }
 
-    public UserFeatures(int numPointerMoves, double avgPointerSpeed, boolean usedKeyboard,
-                        long sessionDuration, String ipAddress, String userAgent) {
+    public UserFeatures(int numPointerMoves, double avgPointerSpeed, boolean usedKeyboard, long sessionDuration, String ipAddress, String userAgent) {
         this.numPointerMoves = numPointerMoves;
         this.avgPointerSpeed = avgPointerSpeed;
         this.usedKeyboard = usedKeyboard;

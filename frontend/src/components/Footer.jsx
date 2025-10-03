@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import "./Footer.css";
 
 export default function Footer() {
@@ -5,30 +6,20 @@ export default function Footer() {
     <footer className="footer">
       <div className="footer-container">
         <div className="footer-content">
-          <div className="footer-section">
-            <h3>Passive Captcha</h3>
-            <p>Making the web safer and more user-friendly.</p>
+          <div className="footer-brand">
+            <h3>🛡️ PassiveCaptcha</h3>
+            <p>Invisible bot protection for modern applications</p>
           </div>
           
-          <div className="footer-section">
-            <h4>Quick Links</h4>
-            <div className="footer-links">
-              <a href="/">Home</a>
-              <a href="/about">About</a>
-              <a href="/services">Services</a>
-              <a href="/stats">Stats</a>
-            </div>
-          </div>
-          
-          <div className="footer-section">
-            <h4>Contact</h4>
-            <p>Email: info@passivecaptcha.com</p>
-            <p>Support: support@passivecaptcha.com</p>
+          <div className="footer-links">
+            <Link to="/" className="footer-link">Home</Link>
+            <Link to="/demo" className="footer-link">Demo</Link>
+            <Link to="/contact" className="footer-link">Contact</Link>
           </div>
         </div>
         
         <div className="footer-bottom">
-          <p>&copy; 2025 Passive Captcha. All rights reserved.</p>
+          <p>&copy; 2024 PassiveCaptcha. All rights reserved.</p>
         </div>
       </div>
     </footer>
