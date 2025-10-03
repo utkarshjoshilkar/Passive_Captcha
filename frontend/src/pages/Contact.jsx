@@ -11,9 +11,34 @@ export default function Contact() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Contact form submitted:", formData);
-    alert("Thank you! We'll contact you within 24 hours.");
-    setFormData({ name: "", email: "", company: "", message: "" });
+    
+    // Create FormData object and append all fields
+    const web3FormData = new FormData();
+    web3FormData.append("access_key", "d4992ade-408a-4e1e-b7ef-4cb9fbe5afac"); // Replace with your actual key
+    web3FormData.append("name", formData.name);
+    web3FormData.append("email", formData.email);
+    web3FormData.append("company", formData.company);
+    web3FormData.append("message", formData.message);
+
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: web3FormData
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert("Thank you! We'll contact you within 24 hours.");
+        setFormData({ name: "", email: "", company: "", message: "" });
+      } else {
+        console.log("Error", data);
+        alert("Something went wrong. Please try again.");
+      }
+    } catch (error) {
+      console.log("Error", error);
+      alert("Network error. Please check your connection and try again.");
+    }
   };
 
   const handleChange = (e) => {
