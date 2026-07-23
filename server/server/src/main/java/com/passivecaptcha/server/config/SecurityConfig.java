@@ -19,8 +19,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
-                );
+                        .anyRequest().permitAll());
 
         return http.build();
     }
@@ -34,6 +33,15 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
+        // Public API CORS - allow all, we validate Origin in controller
+        CorsConfiguration publicConfig = new CorsConfiguration();
+        publicConfig.setAllowedOrigins(Arrays.asList("*"));
+        publicConfig.setAllowedMethods(Arrays.asList("GET", "POST", "OPTIONS"));
+        publicConfig.setAllowedHeaders(Arrays.asList("*"));
+        source.registerCorsConfiguration("/api/public/**", publicConfig);
+
+        // Dashboard/Private API CORS
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }

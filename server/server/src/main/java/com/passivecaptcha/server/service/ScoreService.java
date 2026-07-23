@@ -18,15 +18,6 @@ public class ScoreService {
     public double calculateScore(UserFeatures features) {
         double score = 0.0;
 
-        System.out.println("🔍 Analyzing behavior features:");
-        System.out.println("  - Mouse moves: " + features.getNumPointerMoves());
-        System.out.println("  - Avg speed: " + features.getAvgPointerSpeed());
-        System.out.println("  - Path curvature: " + features.getPathCurvature());
-        System.out.println("  - Keyboard used: " + features.isUsedKeyboard());
-        System.out.println("  - Session duration: " + features.getSessionDuration());
-        System.out.println("  - Scrolls: " + features.getNumScrolls());
-        System.out.println("  - Scroll direction changes: " + features.getScrollDirectionChanges());
-
         // 1. Pointer moves: Very few moves = bot-like
         double moveScore = 0.0;
         if (features.getNumPointerMoves() < 5) {
@@ -37,7 +28,6 @@ public class ScoreService {
             moveScore = Math.min(features.getNumPointerMoves() / 50.0, 1.0);
         }
         score += moveScore * POINTER_MOVE_WEIGHT;
-        System.out.println("  - Move score: " + moveScore);
 
         // 2. Speed: Too perfect or too fast = bot-like
         double speed = features.getAvgPointerSpeed();
@@ -52,7 +42,6 @@ public class ScoreService {
             speedScore = 0.5; // Borderline
         }
         score += speedScore * SPEED_WEIGHT;
-        System.out.println("  - Speed score: " + speedScore);
 
         // 3. Path curvature: Very straight lines = bot-like
         double curvature = features.getPathCurvature();
@@ -65,14 +54,10 @@ public class ScoreService {
             curvatureScore = Math.min(curvature / 2.0, 1.0); // Curvy = human
         }
         score += curvatureScore * CURVATURE_WEIGHT;
-        System.out.println("  - Curvature score: " + curvatureScore);
 
         // 4. Keyboard usage: No keyboard = suspicious
         if (features.isUsedKeyboard()) {
             score += KEYBOARD_WEIGHT;
-            System.out.println("  - Keyboard bonus: +" + KEYBOARD_WEIGHT);
-        } else {
-            System.out.println("  - No keyboard usage");
         }
 
         // 5. Session duration: Very short = bot-like
@@ -85,7 +70,6 @@ public class ScoreService {
             sessionScore = Math.min(features.getSessionDuration() / 10000.0, 1.0);
         }
         score += sessionScore * SESSION_WEIGHT;
-        System.out.println("  - Session score: " + sessionScore);
 
         // 6. Scroll behavior: No scrolling or minimal = bot-like
         double scrollScore = 0.0;
@@ -103,21 +87,18 @@ public class ScoreService {
         }
         scrollScore = Math.min(scrollScore, 1.0);
         score += scrollScore * SCROLL_WEIGHT;
-        System.out.println("  - Scroll score: " + scrollScore);
 
         // 7. Scroll direction: No changes = bot-like
         double directionScore = Math.min(features.getScrollDirectionChanges() / 3.0, 1.0);
         score += directionScore * SCROLL_DIRECTION_WEIGHT;
-        System.out.println("  - Direction score: " + directionScore);
 
         // Penalize obvious bot patterns
         if (isBotPattern(features)) {
             score *= 0.3; // Heavy penalty for bot patterns
-            System.out.println("  ⚠️ Bot pattern detected - heavy penalty applied");
+
         }
 
         double finalScore = Math.min(Math.max(score, 0.0), 1.0);
-        System.out.println("🎯 Final score: " + finalScore);
 
         return finalScore;
     }

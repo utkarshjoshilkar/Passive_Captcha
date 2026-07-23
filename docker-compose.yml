@@ -1,26 +1,42 @@
-# version: "3.8"
-# services:
-#   backend:
-#     build: ./backend-server
-#     ports:
-#       - "8080:8080"
-#     environment:
-#       - SPRING_PROFILES_ACTIVE=default
-#       - ml.service.url=http://ml-service:8000
-#     depends_on:
-#       - ml-service
-#     networks:
-#       - pc-net
+version: "3.8"
+services:
+  mysql:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: passive_captcha_db
+    ports:
+      - "3306:3306"
+    networks:
+      - pc-net
 
-#   ml-service:
-#     build: ./ml-service
-#     ports:
-#       - "8000:8000"
-#     volumes:
-#       - ./ml-service/model:/app/model
-#     networks:
-#       - pc-net
+  backend:
+    build: ./server/server
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=default
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/passive_captcha_db?useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - ML_SERVICE_URL=http://ml-service:8000/predict
+    depends_on:
+      - ml-service
+      - mysql
+    networks:
+      - pc-net
 
-# networks:
-#   pc-net:
-#     driver: bridge
+  ml-service:
+    build: ./ml-service
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ml-service/model:/app/model
+    networks:
+      - pc-net
+
+networks:
+  pc-net:
+    driver: bridge
