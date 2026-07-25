@@ -41,28 +41,50 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Section */}
       <section className="features-section">
         <div className="container">
           <div className="section-header">
             <h2>Why Choose PassiveCaptcha</h2>
-            <p>Modern security that doesn't compromise user experience</p>
+            <p>Modern security that does not compromise user experience</p>
           </div>
           <div className="features-grid">
             <div className="feature-card">
               <div className="feature-icon">👤</div>
               <h3>Zero User Friction</h3>
-              <p>No puzzles to solve, no images to click. Protection happens invisibly in the background.</p>
+              <p>No puzzles, no image challenges, no interruptions. Protection works in the background.</p>
             </div>
-            {/* <div className="feature-card">
-              <div className="feature-icon">🤖</div>
-              <h3>AI-Powered Detection</h3>
-              <p>Advanced machine learning analyzes behavior to detect bots with 99.8% accuracy.</p>
-            </div> */}
             <div className="feature-card">
               <div className="feature-icon">⚡</div>
-              <h3>Easy Integration</h3>
-              <p>Add powerful bot protection with just a few lines of code in minutes.</p>
+              <h3>Fast Integration</h3>
+              <p>Install the service, collect behavioral signals, and start scoring requests in minutes.</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">🧠</div>
+              <h3>Heuristic-Based Intelligence</h3>
+              <p>Version 1 uses transparent rules and explainable scoring to make the system easy to understand.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="info-section">
+        <div className="container">
+          <div className="section-header">
+            <h2>How It Works</h2>
+            <p>Visitors generate behavioral signals, the backend scores them, and the platform returns a heuristic decision.</p>
+          </div>
+          <div className="workflow-grid">
+            <div className="workflow-card">
+              <h3>1. Collect</h3>
+              <p>Mouse movement, scrolling, keyboard activity, and session timing are captured anonymously.</p>
+            </div>
+            <div className="workflow-card">
+              <h3>2. Score</h3>
+              <p>The backend evaluates these signals using a transparent heuristic engine.</p>
+            </div>
+            <div className="workflow-card">
+              <h3>3. Decide</h3>
+              <p>The platform returns allow, review, or challenge based on the score.</p>
             </div>
           </div>
         </div>

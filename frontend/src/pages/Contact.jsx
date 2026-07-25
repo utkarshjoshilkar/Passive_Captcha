@@ -3,41 +3,41 @@ import "./Contact.css";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
-    name: "",
+    fullName: "",
     email: "",
     company: "",
     message: ""
   });
+  const [statusMessage, setStatusMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Create FormData object and append all fields
-    const web3FormData = new FormData();
-    web3FormData.append("access_key", "d4992ade-408a-4e1e-b7ef-4cb9fbe5afac"); // Replace with your actual key
-    web3FormData.append("name", formData.name);
-    web3FormData.append("email", formData.email);
-    web3FormData.append("company", formData.company);
-    web3FormData.append("message", formData.message);
 
     try {
-      const response = await fetch("https://api.web3forms.com/submit", {
+      const response = await fetch("http://localhost:8080/api/v1/contact", {
         method: "POST",
-        body: web3FormData
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          email: formData.email,
+          company: formData.company,
+          message: formData.message
+        })
       });
 
       const data = await response.json();
 
-      if (data.success) {
-        alert("Thank you! We'll contact you within 24 hours.");
-        setFormData({ name: "", email: "", company: "", message: "" });
+      if (response.ok) {
+        setStatusMessage(data.message || "Your request has been recorded successfully.");
+        setFormData({ fullName: "", email: "", company: "", message: "" });
       } else {
-        console.log("Error", data);
-        alert("Something went wrong. Please try again.");
+        throw new Error(data.message || "Something went wrong. Please try again.");
       }
     } catch (error) {
       console.log("Error", error);
-      alert("Network error. Please check your connection and try again.");
+      setStatusMessage(error.message || "Network error. Please check your connection and try again.");
     }
   };
 
@@ -76,14 +76,14 @@ export default function Contact() {
           </div>
 
           <form className="contact-form" onSubmit={handleSubmit}>
-            <h2>Request API key </h2>
+            <h2>Request Developer Access</h2>
             
             <div className="form-group">
               <label>Full Name *</label>
               <input
                 type="text"
-                name="name"
-                value={formData.name}
+                name="fullName"
+                value={formData.fullName}
                 onChange={handleChange}
                 required
               />
@@ -122,8 +122,14 @@ export default function Contact() {
               />
             </div>
 
+            {statusMessage && (
+              <p className="form-status" style={{ marginTop: "12px", color: "#0f766e" }}>
+                {statusMessage}
+              </p>
+            )}
+
             <button type="submit" className="submit-btn">
-              Request
+              Submit Request
             </button>
           </form>
         </div>
