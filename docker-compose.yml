@@ -2,41 +2,38 @@ version: "3.8"
 services:
   mysql:
     image: mysql:8.0
-    command: --default-authentication-plugin=mysql_native_password
-    restart: always
+    container_name: passivecaptcha-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: 1234
       MYSQL_DATABASE: passive_captcha_db
     ports:
       - "3306:3306"
-    networks:
-      - pc-net
+    volumes:
+      - mysql_data:/var/lib/mysql
 
   backend:
-    build: ./server/server
+    build:
+      context: ./server/server
+      dockerfile: Dockerfile
+    container_name: passivecaptcha-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/passive_captcha_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 1234
+    depends_on:
+      - mysql
     ports:
       - "8080:8080"
-    environment:
-      - SPRING_PROFILES_ACTIVE=default
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/passive_captcha_db?useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
-      - ML_SERVICE_URL=http://ml-service:8000/predict
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: passivecaptcha-frontend
     depends_on:
-      - ml-service
-      - mysql
-    networks:
-      - pc-net
-
-  ml-service:
-    build: ./ml-service
+      - backend
     ports:
-      - "8000:8000"
-    volumes:
-      - ./ml-service/model:/app/model
-    networks:
-      - pc-net
+      - "3000:3000"
 
-networks:
-  pc-net:
-    driver: bridge
+volumes:
+  mysql_data:

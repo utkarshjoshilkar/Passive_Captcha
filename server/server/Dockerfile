@@ -1,5 +1,13 @@
-FROM eclipse-temurin:21-jdk-jammy
+# build stage
+FROM maven:3.9.0-eclipse-temurin-17 as builder
+WORKDIR /build
+COPY pom.xml .
+COPY src ./src
+RUN mvn -B -DskipTests package
+
+# runtime image
+FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
-COPY target/server-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=builder /build/target/*.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","app.jar"]
+ENTRYPOINT ["java","-jar","/app/app.jar"]
