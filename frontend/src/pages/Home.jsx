@@ -12,11 +12,15 @@ export default function Home() {
               PassiveCaptcha: Stop Bots. <span className="highlight">Not Users.</span>
             </h1>
             <p className="hero-subtitle">
-              Invisible bot protection that works in the background. No puzzles, no challenges, 
+              Invisible bot protection that works in the background. No puzzles, no challenges,
               just powerful security that your users will never see.
             </p>
             <div className="hero-buttons">
-              <Link to="/demo" className="btn btn-primary">
+              <Link
+                id="view-demo-button"
+                to="/demo"
+                className="btn btn-primary"
+              >
                 View Demo
               </Link>
               <Link to="/contact" className="btn btn-secondary">

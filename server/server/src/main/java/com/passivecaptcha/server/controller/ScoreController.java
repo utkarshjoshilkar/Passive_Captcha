@@ -64,7 +64,9 @@ public class ScoreController {
 
             features.setScore(score);
             features.setDecision(decision);
-            features.setLabel(decisionToLabel(decision));
+            features.setLabel(payload.getLabel());
+            features.setBotFamily(payload.getBotFamily());
+            features.setBotVersion(payload.getBotVersion());
 
             // Persist feature vector
             UserFeatures saved = featuresRepo.save(features);
