@@ -1,5 +1,11 @@
 package com.passivecaptcha.bot;
 
+
+import com.passivecaptcha.bot.bota.util.BrowserEnvironment;
+import com.passivecaptcha.bot.bota.util.DefaultEnvironment;
+import com.passivecaptcha.bot.bota.util.VariantEnvironment;
+import com.passivecaptcha.bot.bota.util.PersonalityManager;
+
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
@@ -10,6 +16,8 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import com.passivecaptcha.bot.bota.util.HumanBehavior;
+import com.passivecaptcha.bot.bota.util.HumanMouse;
 
 import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;
@@ -18,12 +26,12 @@ public class BotA {
 
     private static final String BASE_URL = "http://localhost:3000";
 
-    private static final int WAIT_TIMEOUT = 10;
+    private static final int WAIT_TIMEOUT = 25;
 
-    private static final String BOT_NAME = "John Doe";
+    private static final String BOT_NAME = "John machaye Doe";
 
     private static final String BOT_FEEDBACK =
-            "The Passive CAPTCHA interface is responsive and the interaction feels smooth.";
+            "The Passive CAPTCHA interaction feels smooth.";
 
     private WebDriver driver;
 
@@ -35,15 +43,16 @@ public class BotA {
     for (int i = 1; i <= TOTAL_RUNS; i++) {
 
         System.out.println("====================================");
-        System.out.println("Starting BotA V2 Session " + i + "/" + TOTAL_RUNS);
+        System.out.println("Starting BotA V5 Session " + i + "/" + TOTAL_RUNS);
         System.out.println("====================================");
 
 
     BotA bot = new BotA();
+    PersonalityManager.initialize();
 
     try {
 
-        bot.launchBrowser();
+        bot.launchBrowser(i);
 
         bot.openApplication();
 
@@ -51,9 +60,10 @@ public class BotA {
 
         bot.waitForDemoPage();
         bot.sleepRandom(1500, 3500);
+        
 
         // Small mouse movement before interacting
-        bot.performMouseMovement();
+        
         bot.performScrolling();
         bot.sleepRandom(800, 1800);
 
@@ -64,6 +74,7 @@ public class BotA {
         bot.sleepRandom(700, 2000);
 
         bot.fillFeedback();
+        bot.performDoubleClick();
 
         // Now perform a small scroll
         bot.performScrolling();
@@ -88,7 +99,7 @@ public class BotA {
 
     } catch (Exception e) {
 
-        System.err.println("BotA V1 - Session " + i + " failed.");
+        System.err.println("bota V5 - Session " + i + " failed.");
         e.printStackTrace();
 
     } finally {
@@ -103,22 +114,34 @@ public class BotA {
         }
     }
 
-    System.out.println("All 60 BotA V1 sessions completed.");
+    System.out.println("All 60 bota V5 sessions completed.");
 }
+
    /**
  * Launches Chrome browser and initializes WebDriverWait.
  */
-public void launchBrowser() {
+public void launchBrowser(int session) {
 
     System.out.println("\n====================================");
     System.out.println("Launching Browser...");
     System.out.println("====================================");
-
+    
     WebDriverManager.chromedriver().setup();
 
     driver = new ChromeDriver();
 
-    driver.manage().window().maximize();
+    BrowserEnvironment environment;
+
+if (session <= 30) {
+    environment = new DefaultEnvironment();
+} else {
+    environment = new VariantEnvironment();
+}
+
+    System.out.println("Environment : " + environment.getClass().getSimpleName());
+    System.out.println("====================================");
+
+environment.configure(driver);
 
     wait = new WebDriverWait(driver, Duration.ofSeconds(WAIT_TIMEOUT));
 }
@@ -132,6 +155,7 @@ public void openApplication() {
     System.out.println("Opening application...");
 
     driver.get(BASE_URL);
+    HumanBehavior.readingPause();
 
 }
 
@@ -148,9 +172,14 @@ public void clickViewDemo() {
                     By.id("view-demo-button")
             )
     );
+    HumanMouse mouse = new HumanMouse(driver);
+    mouse.moveToElement(demoButton);
+
+    HumanBehavior.thinkingPause();  
+    HumanBehavior.hoverPause();
 
     demoButton.click();
-    sleepRandom(300,600);
+    HumanBehavior.actionPause();
 
 }
 
@@ -213,33 +242,15 @@ private void sleepRandom(int min, int max) {
  * - Direction changes
  * - Hesitation
  */
-public void performMouseMovement() {
+/**public void performMouseMovement() {
 
-    System.out.println("Performing mouse movement...");
+    System.out.println("Performing human-like mouse movement...");
 
-    Actions actions = new Actions(driver);
+    HumanMouse humanMouse = new HumanMouse(driver);
+    humanMouse.performHumanMouseMovement();
 
-    actions
-            .moveByOffset(180, 120)
-            .pause(Duration.ofMillis(randomDelay(150, 700)))
-
-            .moveByOffset(120, -40)
-            .pause(Duration.ofMillis(randomDelay(150, 700)))
-
-            .moveByOffset(-90, 160)
-            .pause(Duration.ofMillis(randomDelay(150, 700)))
-
-            .moveByOffset(-130, -80)
-            .pause(Duration.ofMillis(randomDelay(150, 700)))
-
-            .moveByOffset(80, 40)
-            .pause(Duration.ofMillis(randomDelay(150, 700)))
-
-            .perform();
-
-    sleepRandom(300,600);
-
-}
+    sleepRandom(300, 600);
+}**/
 /**
  * Scrolls down and up.
  *
@@ -318,6 +329,8 @@ public void fillName() {
                     By.id("user-name")
             )
     );
+    HumanMouse mouse = new HumanMouse(driver);
+mouse.moveToElement(nameField);
 
     // Bring the field into the center of the screen
     ((JavascriptExecutor) driver).executeScript(
@@ -325,7 +338,7 @@ public void fillName() {
             nameField
     );
 
-    sleepRandom(300,500);
+    
 
     nameField.click();
 
@@ -333,11 +346,12 @@ public void fillName() {
 
     nameField.clear();
 
-    sleepRandom(120,250);
+    
+    HumanBehavior.thinkingPause();
 
-    typeSlowly(nameField, BOT_NAME);
+    HumanBehavior.typeLikeHuman(nameField, BOT_NAME);
 
-    sleepRandom(250,500);
+    HumanBehavior.actionPause();
 
 }
 
@@ -353,17 +367,19 @@ public void selectRating() {
                     By.id("rating-4")
             )
     );
+    HumanMouse mouse = new HumanMouse(driver);
+mouse.moveToElement(rating);
 
     ((JavascriptExecutor) driver).executeScript(
         "arguments[0].scrollIntoView({block:'center'});",
         rating
 );
 
-sleepRandom(300,500);
+HumanBehavior.thinkingPause();
 
 rating.click();
 
-    sleepRandom(250,450);
+   HumanBehavior.actionPause();;
 
 }
 
@@ -379,12 +395,13 @@ public void fillFeedback() {
                     By.id("feedback")
             )
     );
+    HumanMouse mouse = new HumanMouse(driver);
+mouse.moveToElement(feedback);
+
 ((JavascriptExecutor) driver).executeScript(
         "arguments[0].scrollIntoView({block:'center'});",
         feedback
 );
-
-sleepRandom(300,500);
 
 feedback.click();
     sleepRandom(200,400);
@@ -393,7 +410,7 @@ feedback.click();
 
     sleepRandom(150,300);
 
-    typeSlowly(feedback, BOT_FEEDBACK);
+    HumanBehavior.typeLikeHuman(feedback, BOT_FEEDBACK);
 
     sleepRandom(300,600);
 
@@ -470,8 +487,11 @@ public void submitFeedback() {
         "arguments[0].scrollIntoView({block:'center'});",
         submitButton
 );
+HumanMouse mouse = new HumanMouse(driver);
+mouse.moveToElement(submitButton);
 
-sleepRandom(300,500);
+HumanBehavior.thinkingPause();
+HumanBehavior.hoverPause();
 
 submitButton.click();
 
@@ -497,8 +517,7 @@ submitButton.click();
 
     }
 
-    sleepRandom(400,700);
-
+    
 }
 
 public void clickAnalyze() {
@@ -510,16 +529,18 @@ public void clickAnalyze() {
                     By.id("analyze-button")
             )
     );
+    HumanMouse mouse = new HumanMouse(driver);
+    mouse.moveToElement(analyzeButton);
 
     ((JavascriptExecutor) driver).executeScript(
         "arguments[0].scrollIntoView({block:'center'});",
         analyzeButton
 );
 
-sleepRandom(1500, 2000);
+HumanBehavior.hoverPause();
 
 analyzeButton.click();
-    sleepRandom(1500, 2000);
+    
 
     System.out.println("Analyze button clicked.");
 
@@ -542,8 +563,10 @@ public void waitForAnalysisResult() {
     System.out.println("Behavior Analysis Completed");
     System.out.println("====================================");
     System.out.println();
+    HumanBehavior.idlePause();
 
 }
+
 
 public void closeBrowser() {
 

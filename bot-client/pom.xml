@@ -30,6 +30,12 @@
             <version>6.1.0</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.microsoft.playwright</groupId>
+            <artifactId>playwright</artifactId>
+            <version>1.54.0</version>
+        </dependency>
+
     </dependencies>
     <build>
     <plugins>
@@ -42,5 +48,6 @@
 
     </plugins>
 </build>
+
 
 </project>

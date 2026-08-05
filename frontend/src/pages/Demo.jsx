@@ -3,9 +3,9 @@ import "./Demo.css";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 const API_URL = "http://localhost:8080/api/v1/score";
-const DATASET_LABEL = "BOT";
-const BOT_FAMILY = "BotA";
-const BOT_VERSION = "V2";
+const DATASET_LABEL = "HUMAN";
+const BOT_FAMILY = null;
+const BOT_VERSION = null;
 const IDLE_THRESHOLD = 1000;  // ms gap → idle
 const HESIT_SPEED = 0.1;   // px/ms → hesitation threshold
 const HESIT_DURATION = 100;   // ms below threshold → hesitation counted
