@@ -10,10 +10,7 @@ import java.util.stream.Collectors;
 /**
  * Computes the full behavioral feature vector from a raw event stream.
  *
- * This allows:
- *  1. Server-side validation of client-submitted features
- *  2. Future recomputation if scoring algorithms improve,
- *     without asking users to generate new sessions.
+ * Provides a reusable statistical toolkit and computes extended behavioral biometrics.
  *
  * All time units are milliseconds. All distance units are pixels.
  * deltaTime <= 0 intervals are skipped to avoid division by zero.
@@ -61,41 +58,45 @@ public class FeatureExtractorService {
         List<RawEvent> visEvents    = filter(sorted, "visibilitychange");
         List<RawEvent> resizeEvents = filter(sorted, "resize");
 
-        extractMouseFeatures(f, mouseEvents);
+        List<Double> mouseSpeeds = extractMouseFeatures(f, mouseEvents, sessionDurationMs);
         extractClickFeatures(f, clickEvents, rClickEvents);
         extractScrollFeatures(f, scrollEvents);
-        extractKeyboardFeatures(f, keyEvents, pasteEvents, copyEvents, sessionDurationMs);
+        extractKeyboardFeatures(f, keyEvents, pasteEvents, copyEvents);
         extractBrowserFeatures(f, focusEvents, visEvents, resizeEvents);
         extractStatisticalFeatures(f, sorted, sessionDurationMs,
-                mouseEvents, clickEvents, scrollEvents, keyEvents);
+                mouseEvents, clickEvents, scrollEvents, keyEvents, mouseSpeeds);
 
         return f;
     }
 
     // ─────────────────────────────── MOUSE ────────────────────────────────────
-    private void extractMouseFeatures(UserFeatures f, List<RawEvent> events) {
+    private List<Double> extractMouseFeatures(UserFeatures f, List<RawEvent> events, long sessionDurationMs) {
         int n = events.size();
         f.setNumPointerMoves(n);
-        if (n < 2) return;
+        List<Double> speeds = new ArrayList<>();
+        if (n < 2) {
+            f.setIdleRatio(sessionDurationMs > 0 ? Math.min(1.0, (double) f.getIdleTimeMs() / sessionDurationMs) : 0.0);
+            return speeds;
+        }
 
         double totalDist = 0;
         double prevSpeed = -1;
         double prevAcc   = Double.NaN;
-        double maxSpeed  = 0, maxAcc = 0;
-        List<Double> speeds = new ArrayList<>();
         List<Double> accs   = new ArrayList<>();
         List<Double> jerks  = new ArrayList<>();
         List<Double> angles = new ArrayList<>();
+        List<Double> curvatures = new ArrayList<>();
+        List<Double> hesitationDurations = new ArrayList<>();
 
-        int  dirChanges    = 0;
-        int  hesitations   = 0;
-        long idleMs        = 0;
+        int  dirChanges  = 0;
+        int  hesitations = 0;
+        long idleMs      = 0;
 
         // Start/end for straightness ratio
         double startX = events.get(0).getX() != null ? events.get(0).getX() : 0;
         double startY = events.get(0).getY() != null ? events.get(0).getY() : 0;
-        double endX   = events.get(n-1).getX() != null ? events.get(n-1).getX() : 0;
-        double endY   = events.get(n-1).getY() != null ? events.get(n-1).getY() : 0;
+        double endX   = events.get(n - 1).getX() != null ? events.get(n - 1).getX() : 0;
+        double endY   = events.get(n - 1).getY() != null ? events.get(n - 1).getY() : 0;
 
         Double lastAngle = null;
         long   hesStart  = -1;
@@ -114,7 +115,6 @@ public class FeatureExtractorService {
 
             double speed = dist / dt; // px/ms
             speeds.add(speed);
-            if (speed > maxSpeed) maxSpeed = speed;
 
             // Idle detection
             if (dt > IDLE_THRESHOLD_MS) idleMs += dt;
@@ -124,7 +124,11 @@ public class FeatureExtractorService {
                 if (hesStart < 0) hesStart = prev.getTimestamp();
             } else {
                 if (hesStart >= 0) {
-                    if (cur.getTimestamp() - hesStart >= 100) hesitations++;
+                    long duration = cur.getTimestamp() - hesStart;
+                    if (duration >= 100) {
+                        hesitations++;
+                        hesitationDurations.add((double) duration);
+                    }
                     hesStart = -1;
                 }
             }
@@ -135,6 +139,7 @@ public class FeatureExtractorService {
             if (lastAngle != null) {
                 double diff = Math.abs(angle - lastAngle);
                 if (diff > Math.PI) diff = 2 * Math.PI - diff;
+                curvatures.add(diff);
                 if (diff > DIR_CHANGE_ANGLE) dirChanges++;
             }
             lastAngle = angle;
@@ -143,10 +148,9 @@ public class FeatureExtractorService {
             if (prevSpeed >= 0) {
                 double acc = Math.abs(speed - prevSpeed) / dt;
                 accs.add(acc);
-                if (acc > maxAcc) maxAcc = acc;
 
                 // Jerk
-                if (!Double.isNaN(prevAcc) && !accs.isEmpty()) {
+                if (!Double.isNaN(prevAcc)) {
                     double jerk = Math.abs(acc - prevAcc) / dt;
                     jerks.add(jerk);
                 }
@@ -155,34 +159,57 @@ public class FeatureExtractorService {
             prevSpeed = speed;
         }
 
-        f.setTotalPointerDistance(totalDist);
-        f.setAvgPointerSpeed(mean(speeds));
-        f.setMaxPointerSpeed(maxSpeed);
-        f.setSpeedVariance(variance(speeds));
-        f.setAvgPointerAcceleration(mean(accs));
-        f.setMaxPointerAcceleration(maxAcc);
-        f.setAvgPointerJerk(mean(jerks));
-        f.setMouseDirectionChanges(dirChanges);
-        f.setHesitationCount(hesitations);
-        f.setIdleTimeMs(idleMs);
-
-        // Path curvature = average turning angle
-        if (angles.size() >= 2) {
-            double totalAngleDiff = 0;
-            for (int i = 1; i < angles.size(); i++) {
-                double diff = Math.abs(angles.get(i) - angles.get(i - 1));
-                if (diff > Math.PI) diff = 2 * Math.PI - diff;
-                totalAngleDiff += diff;
+        // Trailing hesitation check
+        if (hesStart >= 0) {
+            long duration = events.get(n - 1).getTimestamp() - hesStart;
+            if (duration >= 100) {
+                hesitations++;
+                hesitationDurations.add((double) duration);
             }
-            f.setPathCurvature(totalAngleDiff / (angles.size() - 1));
         }
 
-        // Straightness ratio
+        // Speed features
+        f.setTotalPointerDistance(totalDist);
+        f.setAvgPointerSpeed(mean(speeds));
+        f.setMaxPointerSpeed(maximum(speeds));
+        f.setSpeedVariance(variance(speeds));
+        f.setMedianPointerSpeed(median(speeds));
+        f.setPointerSpeedStdDev(standardDeviation(speeds));
+        f.setPointerSpeedIQR(interquartileRange(speeds));
+
+        // Acceleration features
+        f.setAvgPointerAcceleration(mean(accs));
+        f.setMaxPointerAcceleration(maximum(accs));
+        f.setMedianPointerAcceleration(median(accs));
+        f.setPointerAccelerationStdDev(standardDeviation(accs));
+        f.setPointerAccelerationVariance(variance(accs));
+
+        // Jerk features
+        f.setAvgPointerJerk(mean(jerks));
+        f.setMaxPointerJerk(maximum(jerks));
+        f.setPointerJerkVariance(variance(jerks));
+
+        // Curvature features
+        f.setPathCurvature(mean(curvatures));
+        f.setMaximumCurvature(maximum(curvatures));
+        f.setCurvatureVariance(variance(curvatures));
+
+        // Straightness & direction changes
         double directDist = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
         f.setStraightnessRatio(totalDist > 0 ? Math.min(directDist / totalDist, 1.0) : 0);
+        f.setMouseDirectionChanges(dirChanges);
 
-        // Mouse entropy (Shannon entropy of quantised direction angles)
+        // Hesitation & Idle
+        f.setHesitationCount(hesitations);
+        f.setAverageHesitationDuration(mean(hesitationDurations));
+        f.setMaximumHesitationDuration(maximum(hesitationDurations));
+        f.setIdleTimeMs(idleMs);
+        f.setIdleRatio(sessionDurationMs > 0 ? Math.min(1.0, (double) idleMs / sessionDurationMs) : 0.0);
+
+        // Mouse entropy
         f.setMouseEntropy(shannonEntropy(quantiseAngles(angles)));
+
+        return speeds;
     }
 
     // ─────────────────────────────── CLICK ────────────────────────────────────
@@ -210,6 +237,8 @@ public class FeatureExtractorService {
 
         f.setDoubleClickCount(dblClicks);
         f.setAvgClickIntervalMs(mean(intervals));
+        f.setMedianClickInterval(median(intervals));
+        f.setMaximumClickInterval(maximum(intervals));
 
         // Position variance = avg of X-variance and Y-variance
         double posVar = (variance(xs) + variance(ys)) / 2.0;
@@ -254,8 +283,7 @@ public class FeatureExtractorService {
 
     // ─────────────────────────────── KEYBOARD ─────────────────────────────────
     private void extractKeyboardFeatures(UserFeatures f, List<RawEvent> keys,
-                                         List<RawEvent> pastes, List<RawEvent> copies,
-                                         long sessionMs) {
+                                         List<RawEvent> pastes, List<RawEvent> copies) {
         int total = keys.size();
         f.setKeyPressCount(total);
         f.setUsedKeyboard(total > 0);
@@ -269,18 +297,35 @@ public class FeatureExtractorService {
         f.setBackspaceRatio(total > 0 ? (double) backspaces / total : 0);
 
         if (total >= 2) {
-            List<Double> intervals = new ArrayList<>();
-            for (int i = 1; i < total; i++) {
-                long gap = keys.get(i).getTimestamp() - keys.get(i - 1).getTimestamp();
-                if (gap > 0) intervals.add((double) gap);
-            }
-            f.setAvgKeyIntervalMs(mean(intervals));
-        }
-
-        // Typing speed in chars/second
-        f.setTypingSpeed(sessionMs > 0 ? total / (sessionMs / 1000.0) : 0);
+    List<Double> intervals = new ArrayList<>();
+    for (int i = 1; i < total; i++) {
+        long gap = keys.get(i).getTimestamp() - keys.get(i - 1).getTimestamp();
+        if (gap > 0) intervals.add((double) gap);
     }
 
+    f.setAvgKeyIntervalMs(mean(intervals));
+    f.setMedianKeyInterval(median(intervals));
+    f.setKeyIntervalStdDev(standardDeviation(intervals));
+    f.setKeyIntervalVariance(variance(intervals));
+
+    // Typing speed in chars/second based on key press duration
+    long firstKey = keys.get(0).getTimestamp();
+    long lastKey = keys.get(total - 1).getTimestamp();
+
+    long typingDurationMs = lastKey - firstKey;
+
+    if (typingDurationMs >= 100) {
+        double typingDurationSec = typingDurationMs / 1000.0;
+        f.setTypingSpeed(total / typingDurationSec);
+    } else {
+        // Ignore unrealistically short typing bursts
+        f.setTypingSpeed(0.0);
+    }
+
+} else {
+    f.setTypingSpeed(0.0);
+}
+}
     // ─────────────────────────────── BROWSER ──────────────────────────────────
     private void extractBrowserFeatures(UserFeatures f, List<RawEvent> focusEvents,
                                         List<RawEvent> visEvents, List<RawEvent> resizeEvents) {
@@ -293,46 +338,114 @@ public class FeatureExtractorService {
     private void extractStatisticalFeatures(UserFeatures f, List<RawEvent> all,
                                             long sessionMs,
                                             List<RawEvent> mouse, List<RawEvent> clicks,
-                                            List<RawEvent> scrolls, List<RawEvent> keys) {
-        // Speed entropy — computed from quantised speeds collected during mouse extraction
-        // (reuse mouse events for speed list)
-        List<Double> speeds = new ArrayList<>();
-        for (int i = 1; i < mouse.size(); i++) {
-            RawEvent p = mouse.get(i - 1), c = mouse.get(i);
-            double dt = c.getTimestamp() - p.getTimestamp();
-            if (dt <= 0) continue;
-            double dx = safeX(c) - safeX(p), dy = safeY(c) - safeY(p);
-            speeds.add(Math.sqrt(dx * dx + dy * dy) / dt);
-        }
-        f.setSpeedEntropy(shannonEntropy(quantiseValues(speeds, 10)));
+                                            List<RawEvent> scrolls, List<RawEvent> keys,
+                                            List<Double> mouseSpeeds) {
+        // Speed entropy — computed from quantised speeds reused from mouse extraction
+        f.setSpeedEntropy(shannonEntropy(quantiseValues(mouseSpeeds, 10)));
 
         // Interaction density = events per second
         double sessionSec = sessionMs / 1000.0;
-        f.setInteractionDensity(sessionSec > 0 ? all.size() / sessionSec : 0);
+        f.setInteractionDensity(sessionSec > 0 ? all.size() / sessionSec : 0.0);
 
         // Event ratio = mouse moves / (clicks + scrolls + keys)
         int denom = clicks.size() + scrolls.size() + keys.size();
         f.setEventRatio(denom > 0 ? (double) mouse.size() / denom : mouse.size());
+
+        // Overall event entropy across defined target event types
+        Set<String> targetTypes = new HashSet<>(Arrays.asList(
+                "mousemove", "click", "rightclick", "scroll", "keydown",
+                "copy", "paste", "focus", "blur", "resize", "visibilitychange"
+        ));
+        List<String> eventTypes = all.stream()
+                .map(RawEvent::getType)
+                .filter(targetTypes::contains)
+                .collect(Collectors.toList());
+        f.setOverallEventEntropy(shannonEntropy(eventTypes));
+
+        // Peak events per second across one-second windows
+        if (all.isEmpty()) {
+            f.setPeakEventsPerSecond(0);
+        } else {
+            long sessionStart = all.get(0).getTimestamp();
+            Map<Long, Integer> windowCounts = new HashMap<>();
+            for (RawEvent e : all) {
+                long windowIndex = (e.getTimestamp() - sessionStart) / 1000L;
+                windowCounts.put(windowIndex, windowCounts.getOrDefault(windowIndex, 0) + 1);
+            }
+            int maxEvents = windowCounts.values().stream().mapToInt(Integer::intValue).max().orElse(0);
+            f.setPeakEventsPerSecond(maxEvents);
+        }
     }
 
-    // ─────────────────────────────── MATH HELPERS ─────────────────────────────
-    private double mean(List<Double> vals) {
-        if (vals.isEmpty()) return 0;
-        return vals.stream().mapToDouble(Double::doubleValue).average().orElse(0);
+    // ─────────────────────────────── STATISTICAL TOOLKIT LIBRARY ─────────────────────────────
+
+    public double minimum(List<Double> values) {
+        if (values == null || values.isEmpty()) return 0.0;
+        return values.stream().mapToDouble(Double::doubleValue).min().orElse(0.0);
     }
 
-    private double variance(List<Double> vals) {
-        if (vals.size() < 2) return 0;
-        double m = mean(vals);
-        return vals.stream().mapToDouble(v -> (v - m) * (v - m)).average().orElse(0);
+    public double maximum(List<Double> values) {
+        if (values == null || values.isEmpty()) return 0.0;
+        return values.stream().mapToDouble(Double::doubleValue).max().orElse(0.0);
     }
+
+    public double median(List<Double> values) {
+        return percentile(values, 50.0);
+    }
+
+    public double percentile(List<Double> values, double percentile) {
+        if (values == null || values.isEmpty()) return 0.0;
+        if (values.size() == 1) return values.get(0);
+        if (percentile <= 0) return minimum(values);
+        if (percentile >= 100) return maximum(values);
+
+        List<Double> sorted = new ArrayList<>(values);
+        Collections.sort(sorted);
+
+        double rank = (percentile / 100.0) * (sorted.size() - 1);
+        int lower = (int) Math.floor(rank);
+        int upper = (int) Math.ceil(rank);
+        double weight = rank - lower;
+
+        return sorted.get(lower) + weight * (sorted.get(upper) - sorted.get(lower));
+    }
+
+    public double interquartileRange(List<Double> values) {
+        if (values == null || values.isEmpty()) return 0.0;
+        return percentile(values, 75.0) - percentile(values, 25.0);
+    }
+
+    public double standardDeviation(List<Double> values) {
+        return Math.sqrt(variance(values));
+    }
+
+    public double mean(List<Double> values) {
+        if (values == null || values.isEmpty()) return 0.0;
+        return values.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+    }
+
+    public double variance(List<Double> values) {
+    if (values == null || values.size() < 2)
+        return 0.0;
+
+    double m = mean(values);
+
+    double sumSquared = values.stream()
+            .mapToDouble(v -> {
+                double diff = v - m;
+                return diff * diff;
+            })
+            .sum();
+
+    return sumSquared / (values.size() - 1);
+}
 
     /**
      * Shannon entropy: H = -Σ p(x) * log2(p(x))
      * Input: list of category labels (Strings)
      */
     private double shannonEntropy(List<String> categories) {
-        if (categories.isEmpty()) return 0;
+        if (categories == null || categories.isEmpty()) return 0.0;
         Map<String, Long> counts = categories.stream()
                 .collect(Collectors.groupingBy(s -> s, Collectors.counting()));
         int total = categories.size();
@@ -346,6 +459,7 @@ public class FeatureExtractorService {
 
     /** Quantise continuous angles into 8 octant buckets */
     private List<String> quantiseAngles(List<Double> angles) {
+        if (angles == null || angles.isEmpty()) return Collections.emptyList();
         List<String> buckets = new ArrayList<>();
         for (double a : angles) {
             int octant = (int) Math.floor(((a + Math.PI) / (2 * Math.PI)) * 8) % 8;
@@ -356,9 +470,9 @@ public class FeatureExtractorService {
 
     /** Quantise continuous values into {@code bins} equal-width buckets */
     private List<String> quantiseValues(List<Double> vals, int bins) {
-        if (vals.isEmpty()) return Collections.emptyList();
-        double min = vals.stream().mapToDouble(Double::doubleValue).min().orElse(0);
-        double max = vals.stream().mapToDouble(Double::doubleValue).max().orElse(1);
+        if (vals == null || vals.isEmpty()) return Collections.emptyList();
+        double min = minimum(vals);
+        double max = maximum(vals);
         double range = max - min;
         List<String> buckets = new ArrayList<>();
         for (double v : vals) {
