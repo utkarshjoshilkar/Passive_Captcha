@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import "../admin.css";
 
+const API_BASE = import.meta.env.VITE_API_URL;
+
 export default function ApiKeys() {
   const [keys, setKeys]           = useState([]);
   const [companyName, setCompanyName] = useState("");
@@ -15,7 +17,7 @@ export default function ApiKeys() {
   const loadKeys = async () => {
     const token = localStorage.getItem("adminToken");
     try {
-      const res  = await fetch("http://localhost:8080/api/v1/api-keys", {
+      const res  = await fetch(`${API_BASE}/api/v1/api-keys`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setKeys(await res.json());
@@ -31,7 +33,7 @@ export default function ApiKeys() {
   const issueKey = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("adminToken");
-    const res = await fetch("http://localhost:8080/api/v1/api-keys", {
+    const res = await fetch(`${API_BASE}/api/v1/api-keys`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ companyName }),
@@ -52,7 +54,7 @@ export default function ApiKeys() {
 
   const updateKey = async (id, action) => {
     const token = localStorage.getItem("adminToken");
-    const res = await fetch(`http://localhost:8080/api/v1/api-keys/${id}/${action}`, {
+    const res = await fetch(`${API_BASE}/api/v1/api-keys/${id}/${action}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
     });

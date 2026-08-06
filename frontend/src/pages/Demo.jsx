@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import "./Demo.css";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
-const API_URL = "http://localhost:8080/api/v1/score";
+const API_BASE = import.meta.env.VITE_API_URL;
+const API_URL = `${API_BASE}/api/v1/score`;
 const DATASET_LABEL = "HUMAN";
 const BOT_FAMILY = null;
 const BOT_VERSION = null;

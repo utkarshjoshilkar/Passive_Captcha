@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../admin.css";
 
+const API_BASE = import.meta.env.VITE_API_URL;
+
 export default function Dashboard() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,7 +20,7 @@ export default function Dashboard() {
     const token = localStorage.getItem("adminToken");
     if (!token) { navigate("/admin/login"); return; }
     try {
-      const res = await fetch("http://localhost:8080/api/v1/contact-requests", {
+      const res = await fetch(`${API_BASE}/api/v1/contact-requests`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Unauthorized");
@@ -37,7 +39,7 @@ export default function Dashboard() {
     if (!token) { navigate("/admin/login"); return; }
     try {
       const res = await fetch(
-        `http://localhost:8080/api/v1/contact-requests/${id}/${action}`,
+        `${API_BASE}/api/v1/contact-requests/${id}/${action}`,
         { method: "POST", headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.ok) {

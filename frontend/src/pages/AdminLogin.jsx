@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE = import.meta.env.VITE_API_URL;
+
 export default function AdminLogin() {
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
@@ -15,7 +17,7 @@ export default function AdminLogin() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8080/api/v1/admin/login", {
+      const response = await fetch(`${API_BASE}/api/v1/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)

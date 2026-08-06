@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE = import.meta.env.VITE_API_URL;
+
 export default function AdminDashboard() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +16,7 @@ export default function AdminDashboard() {
     }
 
     try {
-      const response = await fetch("http://localhost:8080/api/v1/contact-requests", {
+      const response = await fetch(`${API_BASE}/api/v1/contact-requests`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!response.ok) {
@@ -42,7 +44,7 @@ export default function AdminDashboard() {
     }
 
     try {
-      await fetch(`http://localhost:8080/api/v1/contact-requests/${id}/${action}`, {
+      await fetch(`${API_BASE}/api/v1/contact-requests/${id}/${action}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });

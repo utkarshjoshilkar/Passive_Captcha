@@ -64,7 +64,8 @@
 //     setError(null);
     
 //     try {
-//       const response = await fetch('http://localhost:8080/api/v1/score', {
+//       const API_BASE = import.meta.env.VITE_API_URL;
+//       const response = await fetch(`${API_BASE}/api/v1/score`, {
 //         method: 'POST',
 //         headers: {
 //           'Content-Type': 'application/json',
