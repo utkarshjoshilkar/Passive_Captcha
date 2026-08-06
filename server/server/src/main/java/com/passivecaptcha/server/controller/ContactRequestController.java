@@ -10,7 +10,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "*")
 public class ContactRequestController {
 
     private final ContactRequestService contactRequestService;

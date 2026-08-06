@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/v1/export")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "*")
 public class ExportController {
 
     private final CsvExportService csvExportService;
